@@ -33,6 +33,22 @@ int main(int argc, char *argv[])
     }
     Renderer renderer = create_renderer(window, _renderer);
 
+    SDL_Window* window1 = SDL_CreateWindow("SDL3 Renderer", SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    if (!window1) {
+        SDL_Log("Window creation failed: %s", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Renderer* _renderer1 = SDL_CreateRenderer(window1, NULL);
+    if (!_renderer1) {
+        SDL_Log("Renderer creation failed: %s", SDL_GetError());
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+    Renderer renderer1 = create_renderer(window1, _renderer1);
+
     InputManager inputManager = {};
 
     WallsList wallsList;
@@ -50,18 +66,18 @@ int main(int argc, char *argv[])
 
         // ----- INNER OBSTACLES -----
         {{-220, 180}, {100, 60}, {0, 0, 0}},
-        {{40, 200},   {140, 40}, {0, 0, 0}},
-        {{240, 150},  {80, 100}, {0, 0, 0}},
+         {{40, 200},   {140, 40}, {0, 0, 0}},
+         {{240, 150},  {80, 100}, {0, 0, 0}},
 
-        {{-260, 40},  {60, 140}, {0, 0, 0}},
-        {{180, 20},   {70, 160}, {0, 0, 0}},
+         {{-260, 40},  {60, 140}, {0, 0, 0}},
+         {{180, 20},   {70, 160}, {0, 0, 0}},
 
-        {{-180, -120},{140, 50}, {0, 0, 0}},
-        {{60, -160},  {120, 70}, {0, 0, 0}},
-        {{250, -190}, {90, 90},  {0, 0, 0}},
+         {{-180, -120},{140, 50}, {0, 0, 0}},
+         {{60, -160},  {120, 70}, {0, 0, 0}},
+         {{250, -190}, {90, 90},  {0, 0, 0}},
 
-        {{-60, 90},   {50, 50},  {0, 0, 0}},
-        {{-20, -210}, {60, 60},  {0, 0, 0}},
+         {{-60, 90},   {50, 50},  {0, 0, 0}},
+         {{-20, -210}, {60, 60},  {0, 0, 0}},
     };
 
     for (int i = 0; i < sizeof(walls)/sizeof(walls[0]); i++) physics_push_walls_list(&wallsList, &walls[i]);
@@ -105,22 +121,46 @@ int main(int argc, char *argv[])
         player_update(&p);
         physics_check_collisions(&p, &wallsList);
 
-        const float fov_in_rads = FOV * (M_PI / 180.f);
+        begin_frame(&renderer);
+        begin_frame(&renderer1);
+
+        const float fov_in_rads = FOV * (M_PI / 180.0f);
         const float step = fov_in_rads / (float)(RAY_COUNT - 1);
+        const float projectionPlane = (SCREEN_WIDTH / 2.0f) / tanf(fov_in_rads / 2.0f);
+        const float wallWorldHeight = 100.0f;
+        const float sliceWidth = (float)SCREEN_WIDTH / (float)RAY_COUNT;
+
         for (int i = 0; i < RAY_COUNT; i++) {
-            Ray r = {{p.position.x,p.position.y}};
-            float rayAngleDeg = p.angle - fov_in_rads / 2.0f + (float)i * step;
-            Vector2 angle = {cosf(rayAngleDeg), sinf(rayAngleDeg)};
-            raycast_create_ray(&r, &p, angle, &wallsList);
+            Ray r = {{p.position.x, p.position.y}};
+
+            float rayAngle = p.angle - fov_in_rads / 2.0f + (float)i * step;
+            Vector2 dir = { cosf(rayAngle), sinf(rayAngle) };
+
+            float distance = raycast_create_ray(&r, &p, dir, &wallsList);
+
+            float correctedDistance = distance * cosf(rayAngle - p.angle);
+            if (correctedDistance < 0.001f) correctedDistance = 0.001f;
+
+            float wallHeight = (wallWorldHeight / correctedDistance) * projectionPlane;
+
+            float x = i * sliceWidth;
+            float y1 = SCREEN_HEIGHT / 2.0f - wallHeight / 2.0f;
+            float y2 = SCREEN_HEIGHT / 2.0f + wallHeight / 2.0f;
+
+            SDL_SetRenderDrawColor(renderer1.renderer, 0, 0, 255-distance, 255);
+
+            for (int w = 0; w < (int)sliceWidth; w++) {
+                SDL_RenderLine(renderer1.renderer, x + w, y1, x + w, y2);
+            }
+
             debugSquare_set_position(&debugSquaresList.items[i], r.position);
         }
-        begin_frame(&renderer);
-
         render_walls(&renderer, &wallsList);
         render_player(&renderer, &p);
         render_debugSquares(&renderer, &debugSquaresList);
 
         end_frame(&renderer);
+        end_frame(&renderer1);
 
         Uint32 endTime = SDL_GetTicks() - startTime;
         if (FRAME_DELAY > endTime) SDL_Delay(FRAME_DELAY - endTime);
@@ -130,7 +170,9 @@ int main(int argc, char *argv[])
     render_free_debugSquares_list(&debugSquaresList);
 
     destroy_renderer(&renderer);
+    destroy_renderer(&renderer1);
     SDL_DestroyWindow(window);
+    SDL_DestroyWindow(window1);
     SDL_Quit();
 
     return 0;

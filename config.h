@@ -12,7 +12,7 @@
 #define RAY_SIZE 0.1f
 
 #define FOV 60
-#define RAY_COUNT 150
+#define RAY_COUNT SCREEN_WIDTH
 
 #define FPS 60
 #define FRAME_DELAY (1000 / FPS)
