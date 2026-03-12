@@ -9,6 +9,7 @@
 #include <SDL3/SDL.h>
 
 #include "../Objects/Wall.h"
+#include "../Objects/Player.h"
 
 typedef struct {
     SDL_Window *window;
@@ -22,5 +23,8 @@ void end_frame(Renderer *renderer);
 void destroy_renderer(Renderer *renderer);
 
 void render_wall(const Renderer *renderer, Wall* wall);
+void render_player(const Renderer *renderer, const Player* player);
+
+void render_draw_grid_line(const Renderer *renderer);
 
 #endif //RAYCAST_RENDERER_RENDERER_H

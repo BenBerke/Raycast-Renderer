@@ -14,6 +14,10 @@ add_executable(Raycast_Renderer main.c
         src/Math/Vector3.c
         src/Systems/InputManager.c
         Headers/Systems/InputManager.h
+        src/Objects/Player.c
+        Headers/Objects/Player.h
+        src/Systems/Physics.c
+        Headers/Systems/Physics.h
 )
 
 find_package(SDL3 CONFIG REQUIRED)
