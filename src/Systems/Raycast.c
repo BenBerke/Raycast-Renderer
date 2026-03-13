@@ -94,7 +94,7 @@ static bool ray_intersect_wall(Vector2 origin, Vector2 dir, const Wall* wall, fl
 }
 
 RayReturn raycast_create_ray(Ray* ray, const Player* player, Vector2 dir, const WallsList* list) {
-    RayReturn result = {-1.0f, 0, 0, 0, -1, 0.0f};
+    RayReturn result = {-1.0f, 0, 0, 0, -1, 0.0f, 0};
 
     const Vector2 origin = player->position;
     float closestT = (float)MAX_RAY_LENGTH;
@@ -128,6 +128,7 @@ RayReturn raycast_create_ray(Ray* ray, const Player* player, Vector2 dir, const 
     result.g = (unsigned char)closestWall->color.y;
     result.b = (unsigned char)closestWall->color.z;
     result.side = (char)closestSide;
+    result.texture = closestWall->texture;
 
     const float minX = closestWall->position.x - closestWall->scale.x / 2.0f;
     const float minY = closestWall->position.y - closestWall->scale.y / 2.0f;

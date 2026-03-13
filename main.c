@@ -73,26 +73,14 @@ int main(void) {
 
     Renderer renderer = create_renderer(window, sdlRenderer);
 
-    Texture skyBoxTexture = {0};
-    Texture wallTexture = {0};
+    TexturesList textures;
+    textureManager_create_textures_list(&textures,  8);
 
-    if (!create_texture(&skyBoxTexture, "skybox", renderer.renderer)) {
-        destroy_renderer(&renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-
-    if (!create_texture(&wallTexture, "wall", renderer.renderer)) {
-        destroy_texture(&skyBoxTexture);
-        destroy_renderer(&renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
+    int skyBoxTexture = create_texture("skybox", &textures, renderer.renderer);
+    int wallTexture = create_texture("wall", &textures, renderer.renderer);
 
     const float skyDstHeight = SCREEN_HEIGHT;
-    const float skyDstWidth = skyBoxTexture.width * SCREEN_HEIGHT / skyBoxTexture.height;
+    const float skyDstWidth = textures.items[skyBoxTexture].width * SCREEN_HEIGHT / textures.items[skyBoxTexture].height;
     const SDL_FRect skyBoxRect = {0.0f, 0.0f, skyDstWidth, skyDstHeight};
 
     InputManager inputManager = {0};
@@ -161,13 +149,13 @@ int main(void) {
         player_update(&player);
         physics_check_collisions(&player, &wallsList);
 
-        begin_frame(&renderer, skyBoxTexture.texture, &skyBoxRect);
+        begin_frame(&renderer, textures.items[skyBoxTexture].texture, &skyBoxRect);
 
         renderer_draw_walls(
             &renderer,
-            wallTexture.texture,
-            wallTexture.width,
-            wallTexture.height,
+            textures.items[wallTexture].texture,
+            textures.items[wallTexture].width,
+            textures.items[wallTexture].height,
             &player,
             &wallsList,
             debug ? &debugSquaresList : NULL
@@ -200,10 +188,10 @@ int main(void) {
         }
     }
 
-    destroy_texture(&skyBoxTexture);
-    destroy_texture(&wallTexture);
+
     physics_free_walls_list(&wallsList);
     render_free_debugSquares_list(&debugSquaresList);
+    textureManager_free_walls_list(&textures);
 
     destroy_renderer(&renderer);
     SDL_DestroyWindow(window);

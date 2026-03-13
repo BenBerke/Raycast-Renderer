@@ -13,6 +13,7 @@ typedef struct {
     unsigned char b;
     char side;   /* 0 top, 1 bottom, 2 left, 3 right */
     float u;     /* 0.0 -> 1.0 across the wall face */
+    int texture;
 } RayReturn;
 
 RayReturn raycast_create_ray(Ray* ray, const Player* player, Vector2 dir, const WallsList* list);
