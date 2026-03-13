@@ -171,109 +171,14 @@ int main(){
 
         begin_frame(&renderer, skyBoxTexture, &skyBoxRect);
 
-        const float fov_in_rads = FOV * (M_PI / 180.0f);
-
-        const float step = fov_in_rads / (float)(RAY_COUNT - 1);
-        const float projectionPlane = (SCREEN_WIDTH / 2.0f) / tanf(fov_in_rads / 2.0f);
-        const float wallWorldHeight = 100.0f;
-        const float sliceWidth = (float)SCREEN_WIDTH / (float)RAY_COUNT;
-
-        for (int i = 0; i < RAY_COUNT; i++) {
-            Ray ray = {{p.position.x, p.position.y}};
-
-            const float rayAngle = p.angle + fov_in_rads / 2.0f - (float)i * step;
-            const Vector2 dir = { cosf(rayAngle), sinf(rayAngle) };
-
-            const RayReturn rayReturn = raycast_create_ray(&ray, &p, dir, &wallsList);
-
-            float correctedDistance = 0.0f;
-            float wallHeight = 0.0f;
-
-            if (rayReturn.distance != -1.0f) {
-                correctedDistance = rayReturn.distance * cosf(rayAngle - p.angle);
-                if (correctedDistance < 0.001f) correctedDistance = 0.001f;
-
-                wallHeight = (wallWorldHeight / correctedDistance) * projectionPlane;
-            }
-
-            int xStart = (int)floorf((float)i * sliceWidth);
-            int xEnd = (int)ceilf((float)(i + 1) * sliceWidth);
-            if (xEnd <= xStart) xEnd = xStart + 1;
-
-            float y1 = SCREEN_HEIGHT / 2.0f - wallHeight / 2.0f;
-            float y2 = SCREEN_HEIGHT / 2.0f + wallHeight / 2.0f;
-
-            float maxDist = 700.0f;
-            float ambient = 0.25f;
-
-            float t = correctedDistance / maxDist;
-            if (t < 0.0f) t = 0.0f;
-            if (t > 1.0f) t = 1.0f;
-
-
-            float brightness = ambient + (1.0f - ambient) * (1.0f - t);
-            switch (rayReturn.side) {
-                case 0: break;
-                case 1: brightness *= .3f; break;
-                case 2: brightness *= .7f; break;
-                case 3: brightness *= .7f; break;
-                default: break;
-            }
-
-            Uint8 r = (Uint8)(rayReturn.r * brightness);
-            Uint8 g = (Uint8)(rayReturn.g * brightness);
-            Uint8 b = (Uint8)(rayReturn.b * brightness);
-
-            // SDL_SetRenderDrawColor(renderer.renderer, r, g, b, 255);
-            //
-            // SDL_FRect slice = {
-            //     (float)xStart,
-            //     y1,
-            //     (float)(xEnd - xStart),
-            //     y2 - y1
-            // };
-            //
-            // int texX = (int)(rayReturn.u);
-            // if (texX < 0) texX = 0;
-            // if (texX >= wallTexW) texX = wallTexH - 1;
-            //
-            // SDL_RenderFillRect(renderer.renderer, &slice);
-
-            SDL_FRect slice = {
-                (float)xStart,
-                y1,
-                (float)(xEnd - xStart),
-                y2 - y1
-            };
-
-            int texX = (int)(rayReturn.u * wallTexW);
-            if (texX < 0) texX = 0;
-            if (texX >= (int)wallTexW) texX = (int)wallTexW - 1;
-            
-            if (rayReturn.side == 0 || rayReturn.side == 2) {
-                texX = (int)wallTexW - 1 - texX;
-            }
-
-            SDL_FRect src = {
-                (float)texX,
-                0.0f,
-                1.0f,
-                wallTexH
-            };
-
-            SDL_SetTextureColorMod(wallTexture, r, g, b);
-            SDL_RenderTexture(renderer.renderer, wallTexture, &src, &slice);
-
-            if (debug) {
-                debugSquare_set_position(&debugSquaresList.items[i], ray.position);
-            }
-        }
+        renderer_draw_wall(wallTexture, wallTexW, wallTexH, &renderer, &p, &wallsList);
 
         if (debug) {
-            render_walls(&renderer, &wallsList);
-            render_player(&renderer, &p);
-            render_debugSquares(&renderer, &debugSquaresList);
+            render_debug_walls(&renderer, &wallsList);
+            render_debug_player(&renderer, &p);
+            render_debug_squares(&renderer, &debugSquaresList);
         }
+
 
         Uint32 frameTime = SDL_GetTicks() - startTime;
         if (FRAME_DELAY > frameTime) SDL_Delay(FRAME_DELAY - frameTime);

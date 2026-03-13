@@ -4,12 +4,12 @@
 
 #include "../../config.h"
 #include "../../Headers/Systems/Renderer.h"
+#include "../../Headers/Systems/Raycast.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3_image/SDL_image.h>
-#include <SDL3/SDL_surface.h>
 
 void render_create_debugSquares_list(DebugSquaresList* list, int chunkSize) {
     list->count = 0;
@@ -58,7 +58,7 @@ void destroy_renderer(const Renderer *renderer) {
     SDL_DestroyRenderer(renderer->renderer);
 }
 
-void render_walls(const Renderer *renderer, const WallsList* walls) {
+void render_debug_walls(const Renderer *renderer, const WallsList* walls) {
     for (int i = 0; i < walls->count; i++) {
 
         SDL_SetRenderDrawColor(renderer->renderer, (Uint8)walls->items[i].color.x, (Uint8)walls->items[i].color.y, (Uint8)walls->items[i].color.z, 255);
@@ -77,7 +77,7 @@ void render_walls(const Renderer *renderer, const WallsList* walls) {
     }
 }
 
-void render_player(const Renderer *renderer, const Player* player) {
+void render_debug_player(const Renderer *renderer, const Player* player) {
     SDL_SetRenderDrawColor(renderer->renderer, 160, 160, 60, 255);
     float x = player->position.x, y = player->position.y;
     float a = player->scale;
@@ -87,16 +87,9 @@ void render_player(const Renderer *renderer, const Player* player) {
 
     SDL_FRect rect = {screenX, screenY, a, a};
     SDL_RenderFillRect(renderer->renderer, &rect);
-
-    // const SDL_FPoint cornerA = {screenX, screenY};
-    // const SDL_FPoint cornerB = {screenX + a, screenY};
-    // const SDL_FPoint cornerC = {screenX + a/2, (float)(screenY - a * sqrt(3)/2)};
-    //
-    // SDL_FPoint corners[] = {cornerA, cornerB, cornerC, cornerA};
-    // SDL_RenderLines(renderer->renderer, corners, sizeof(corners)/sizeof(SDL_FPoint));
 }
 
-void render_debugSquares(Renderer* renderer, const DebugSquaresList* squares) {
+void render_debug_squares(Renderer* renderer, const DebugSquaresList* squares) {
     for (int i = 0; i < squares->count; i++) {
 
         SDL_SetRenderDrawColor(renderer->renderer, (Uint8)squares->items[i].color.x, (Uint8)squares->items[i].color.y, (Uint8)squares->items[i].color.z, 255);
@@ -120,6 +113,82 @@ void render_draw_grid_line(const Renderer *renderer) {
 
     SDL_RenderLine(renderer->renderer, SCREEN_WIDTH/2, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT);
     SDL_RenderLine(renderer->renderer, 0, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT/2);
+}
+
+void renderer_draw_wall(SDL_Texture* wallTexture, float textureWidth, float textureHeight, Renderer* renderer,  Player* p, const WallsList *wallsList) {
+    const float fov_in_rads = FOV * (M_PI / 180.0f);
+
+        const float step = fov_in_rads / (float)(RAY_COUNT - 1);
+        const float projectionPlane = (SCREEN_WIDTH / 2.0f) / tanf(fov_in_rads / 2.0f);
+        const float wallWorldHeight = 100.0f;
+        const float sliceWidth = (float)SCREEN_WIDTH / (float)RAY_COUNT;
+
+        for (int i = 0; i < RAY_COUNT; i++) {
+            Ray ray = {{p->position.x, p->position.y}};
+
+            const float rayAngle = p->angle + fov_in_rads / 2.0f - (float)i * step;
+            const Vector2 dir = { cosf(rayAngle), sinf(rayAngle) };
+
+            const RayReturn rayReturn = raycast_create_ray(&ray, p, dir, wallsList);
+
+            float correctedDistance = 0.0f;
+            float wallHeight = 0.0f;
+
+            if (rayReturn.distance != -1.0f) {
+                correctedDistance = rayReturn.distance * cosf(rayAngle - p->angle);
+                if (correctedDistance < 0.001f) correctedDistance = 0.001f;
+
+                wallHeight = (wallWorldHeight / correctedDistance) * projectionPlane;
+            }
+
+            int xStart = (int)floorf((float)i * sliceWidth);
+            int xEnd = (int)ceilf((float)(i + 1) * sliceWidth);
+            if (xEnd <= xStart) xEnd = xStart + 1;
+
+            float y1 = SCREEN_HEIGHT / 2.0f - wallHeight / 2.0f;
+            float y2 = SCREEN_HEIGHT / 2.0f + wallHeight / 2.0f;
+
+            float maxDist = 700.0f;
+            float ambient = 0.25f;
+
+            float t = correctedDistance / maxDist;
+            if (t < 0.0f) t = 0.0f;
+            if (t > 1.0f) t = 1.0f;
+
+
+            float brightness = ambient + (1.0f - ambient) * (1.0f - t);
+            switch (rayReturn.side) {
+                case 0: break;
+                case 1: brightness *= .3f; break;
+                case 2: brightness *= .7f; break;
+                case 3: brightness *= .7f; break;
+                default: break;
+            }
+
+            Uint8 r = (Uint8)(rayReturn.r * brightness);
+            Uint8 g = (Uint8)(rayReturn.g * brightness);
+            Uint8 b = (Uint8)(rayReturn.b * brightness);
+
+            SDL_FRect slice = {
+                (float)xStart,
+                y1,
+                (float)(xEnd - xStart),
+                y2 - y1
+            };
+
+            int texX = (int)(rayReturn.u * textureWidth);
+            if (texX < 0) texX = 0;
+            if (texX >= (int)textureWidth) texX = (int)textureWidth - 1;
+
+            if (rayReturn.side == 0 || rayReturn.side == 2) {
+                texX = (int)textureWidth - 1 - texX;
+            }
+
+            SDL_FRect src = {(float)texX, 0.0f, 1.0f, textureHeight };
+
+            SDL_SetTextureColorMod(wallTexture, r, g, b);
+            SDL_RenderTexture(renderer->renderer, wallTexture, &src, &slice);
+        }
 }
 
 
