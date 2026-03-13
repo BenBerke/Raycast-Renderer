@@ -27,11 +27,11 @@ void movement(const InputManager* inputManager, Player* p) {
     if (input_manager_get_key(inputManager, SDL_SCANCODE_D)) {
         player_add_velocity(p, vector2_multiply_with_float(right, -p->speed));
     }
-    if (input_manager_get_key(inputManager, SDL_SCANCODE_Q)) {
-        p->angle -= .08f;
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_RIGHT)) {
+        p->angle -= PLAYER_ROT_SPEED;
     }
-    if (input_manager_get_key(inputManager, SDL_SCANCODE_E)) {
-        p->angle += .08f;
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_LEFT)) {
+        p->angle += PLAYER_ROT_SPEED;
     }
 }
 
@@ -94,26 +94,39 @@ int main(int argc, char *argv[]){
     render_create_debugSquares_list(&debugSquaresList, 4);
 
     Wall walls[] = {
-        // ----- OUTER BOUNDARY AT SCREEN EDGES -----
-        //{{0, SCREEN_HEIGHT / 2.0f - 10},   {SCREEN_WIDTH, 20}, {0, 0, 0}},   // top
-        {{0, -SCREEN_HEIGHT / 2.0f + 10},  {SCREEN_WIDTH, 20}, {0, 0, 0}},   // bottom
-        {{-SCREEN_WIDTH / 2.0f + 10, 0},   {20, SCREEN_HEIGHT}, {0, 0, 0}},  // left
-        {{SCREEN_WIDTH / 2.0f - 10, 0},    {20, SCREEN_HEIGHT}, {0, 0, 0}},  // right
+        // ----- TOP SECTION -----
+        {{-260, 220}, {220, 40}, {255, 80, 80}},
+        {{40, 220},   {180, 40}, {255, 170, 60}},
+        {{280, 220},  {140, 40}, {255, 230, 90}},
 
-        // ----- INNER OBSTACLES -----
-        {{-220, 180}, {100, 60}, {0, 0, 0}},
-         {{40, 200},   {140, 40}, {0, 0, 0}},
-         {{240, 150},  {80, 100}, {0, 0, 0}},
+        // ----- LEFT ROOMS / CORRIDORS -----
+        {{-320, 120}, {40, 160}, {80, 220, 120}},
+        {{-220, 100}, {140, 40}, {70, 180, 255}},
+        {{-120, 20},  {40, 120}, {90, 120, 255}},
+        {{-260, -40}, {180, 40}, {140, 100, 255}},
 
-         {{-260, 40},  {60, 140}, {0, 0, 0}},
-         {{180, 20},   {70, 160}, {0, 0, 0}},
+        // ----- CENTRE STRUCTURE -----
+        {{0, 120},    {40, 140}, {200, 90, 255}},
+        {{80, 40},    {120, 40}, {255, 90, 200}},
+        {{-20, -80},  {160, 40}, {255, 100, 140}},
+        {{40, -180},  {40, 120}, {220, 220, 220}},
 
-         {{-180, -120},{140, 50}, {0, 0, 0}},
-         {{60, -160},  {120, 70}, {0, 0, 0}},
-         {{250, -190}, {90, 90},  {0, 0, 0}},
+        // ----- RIGHT ROOMS / CORRIDORS -----
+        {{220, 120},  {160, 40}, {100, 220, 100}},
+        {{320, 20},   {40, 160}, {80, 220, 220}},
+        {{220, -80},  {140, 40}, {80, 140, 255}},
+        {{300, -180}, {120, 40}, {180, 80, 80}},
 
-         {{-60, 90},   {50, 50},  {0, 0, 0}},
-         {{-20, -210}, {60, 60},  {0, 0, 0}},
+        // ----- LOWER SECTION -----
+        {{-260, -220},{180, 40}, {120, 80, 40}},
+        {{0, -240},   {140, 40}, {60, 60, 60}},
+        {{240, -240}, {180, 40}, {40, 120, 60}},
+
+        // ----- SMALL LANDMARK BLOCKS -----
+        {{-60, 180},  {40, 40},  {255, 255, 255}},
+        {{160, 180},  {40, 40},  {255, 255, 255}},
+        {{-180, -140},{50, 50},  {255, 220, 120}},
+        {{140, -20},  {50, 50},  {120, 255, 200}},
     };
 
     for (int i = 0; i < sizeof(walls)/sizeof(walls[0]); i++) physics_push_walls_list(&wallsList, &walls[i]);
@@ -122,7 +135,7 @@ int main(int argc, char *argv[]){
         render_push_debugSquares_list(&debugSquaresList, &ds);
     }
 
-    Player p = {{0, 0}, 60, {0, 0}, 6, 0.5f, 0};
+    Player p = {{0, 0}, PLAYER_SCALE, {0, 0}, PLAYER_SPEED, PLAYER_FRICTION, 0};
 
     bool running = true;
     while (running) {
@@ -155,16 +168,18 @@ int main(int argc, char *argv[]){
         const float sliceWidth = (float)SCREEN_WIDTH / (float)RAY_COUNT;
 
         for (int i = 0; i < RAY_COUNT; i++) {
-            Ray r = {{p.position.x, p.position.y}};
+            Ray ray = {{p.position.x, p.position.y}};
 
-            float rayAngle = p.angle + fov_in_rads / 2.0f - (float)i * step;
-            Vector2 dir = { cosf(rayAngle), sinf(rayAngle) };
+            const float rayAngle = p.angle + fov_in_rads / 2.0f - (float)i * step;
+            const Vector2 dir = { cosf(rayAngle), sinf(rayAngle) };
 
-            float distance = raycast_create_ray(&r, &p, dir, &wallsList);
-            float correctedDistance = 0;
-            float wallHeight = 0;
-            if (distance != -1) {
-                correctedDistance = distance * cosf(rayAngle - p.angle);
+            const RayReturn rayReturn = raycast_create_ray(&ray, &p, dir, &wallsList);
+
+            float correctedDistance = 0.0f;
+            float wallHeight = 0.0f;
+
+            if (rayReturn.distance != -1.0f) {
+                correctedDistance = rayReturn.distance * cosf(rayAngle - p.angle);
                 if (correctedDistance < 0.001f) correctedDistance = 0.001f;
 
                 wallHeight = (wallWorldHeight / correctedDistance) * projectionPlane;
@@ -172,19 +187,25 @@ int main(int argc, char *argv[]){
 
             int xStart = (int)floorf((float)i * sliceWidth);
             int xEnd = (int)ceilf((float)(i + 1) * sliceWidth);
-
             if (xEnd <= xStart) xEnd = xStart + 1;
 
             float y1 = SCREEN_HEIGHT / 2.0f - wallHeight / 2.0f;
             float y2 = SCREEN_HEIGHT / 2.0f + wallHeight / 2.0f;
 
-            float brightness = 255.0f - correctedDistance * 0.8f;
-            if (brightness < 100.0f) brightness = 100.0f;
-            if (brightness > 255.0f) brightness = 255.0f;
+            float maxDist = 700.0f;
+            float ambient = 0.25f;
 
-            Uint8 shade = (Uint8)brightness;
+            float t = correctedDistance / maxDist;
+            if (t < 0.0f) t = 0.0f;
+            if (t > 1.0f) t = 1.0f;
 
-            SDL_SetRenderDrawColor(renderer.renderer, 0, 0, shade, 255);
+            float brightness = ambient + (1.0f - ambient) * (1.0f - t);
+
+            Uint8 r = (Uint8)(rayReturn.r * brightness);
+            Uint8 g = (Uint8)(rayReturn.g * brightness);
+            Uint8 b = (Uint8)(rayReturn.b * brightness);
+
+            SDL_SetRenderDrawColor(renderer.renderer, r, g, b, 255);
 
             SDL_FRect slice = {
                 (float)xStart,
@@ -195,7 +216,9 @@ int main(int argc, char *argv[]){
 
             SDL_RenderFillRect(renderer.renderer, &slice);
 
-            if (debug) debugSquare_set_position(&debugSquaresList.items[i], r.position);
+            if (debug) {
+                debugSquare_set_position(&debugSquaresList.items[i], ray.position);
+            }
         }
 
         if (debug) {

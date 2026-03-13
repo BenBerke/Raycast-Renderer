@@ -1,10 +1,11 @@
 #ifndef RAYCAST_RENDERER_PHYSICS_H
 #define RAYCAST_RENDERER_PHYSICS_H
 
+#include <stdbool.h>
+
 #include "../Objects/Player.h"
 #include "../Objects/Wall.h"
 #include "../Objects/Ray.h"
-#include <stdbool.h>
 
 typedef struct WallsList {
     Wall* items;
@@ -20,6 +21,6 @@ void physics_pop_walls_list(WallsList* list);
 void physics_free_walls_list(WallsList* list);
 
 void physics_check_collisions(Player* player, const WallsList* list);
-bool physics_check_ray_hit(Ray* ray, const WallsList* list);
+bool ray_intersect_wall(Vector2 origin, Vector2 dir, const Wall* wall, float* outT) ;
 
 #endif

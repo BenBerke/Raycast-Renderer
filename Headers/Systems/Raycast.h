@@ -7,7 +7,11 @@
 
 typedef struct WallsList WallsList;
 
-float raycast_create_ray(Ray* r, Player* p, Vector2 dir, const WallsList* list);
-void raycast_move_ray(Ray* r, Vector2 dir, float speed);
+typedef struct {
+    float distance;
+    unsigned char r, g, b;
+} RayReturn;
+
+RayReturn raycast_create_ray(Ray* r, Player* p, Vector2 dir, const WallsList* list);
 
 #endif

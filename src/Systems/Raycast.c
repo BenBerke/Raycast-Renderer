@@ -6,22 +6,44 @@
 
 #include "../../Headers/Systems/Raycast.h"
 
+#include <stdlib.h>
+
 #include "../../config.h"
 #include "../../Headers/Systems/Physics.h"
 
-float raycast_create_ray(Ray* r, Player* p, const Vector2 dir, const WallsList* list) {
-    r->position.x = p->position.x; r->position.y = p->position.y;
-    int i = 0;
-    while (!physics_check_ray_hit(r, list)) {
-        raycast_move_ray(r, dir, 1);
-        if (i > MAX_RAY_LENGTH) return -1;
-        i++;
-    }
-    return sqrtf((p->position.x - r->position.x) * (p->position.x - r->position.x) + (p->position.y - r->position.y) * (p->position.y - r->position.y));
-}
+RayReturn raycast_create_ray(Ray* ray, Player* p, const Vector2 dir, const WallsList* list) {
+    RayReturn result = {-1.0f, 0, 0, 0};
 
-void raycast_move_ray(Ray* r, const Vector2 dir, const float speed) {
-    r->position = vector2_add(r->position, vector2_multiply_with_float(dir, speed));
+    const Vector2 origin = p->position;
+
+    float closestT = (float)MAX_RAY_LENGTH;
+    const Wall* closestWall = NULL;
+
+    for (int i = 0; i < list->count; i++) {
+        float t;
+        if (ray_intersect_wall(origin, dir, &list->items[i], &t)) {
+            if (t >= 0.0f && t < closestT) {
+                closestT = t;
+                closestWall = &list->items[i];
+            }
+        }
+    }
+
+    if (closestWall) {
+        ray->position.x = origin.x + dir.x * closestT;
+        ray->position.y = origin.y + dir.y * closestT;
+
+        result.distance = closestT;
+        result.r = (unsigned char)closestWall->color.x;
+        result.g = (unsigned char)closestWall->color.y;
+        result.b = (unsigned char)closestWall->color.z;
+        return result;
+    }
+
+    ray->position.x = origin.x + dir.x * MAX_RAY_LENGTH;
+    ray->position.y = origin.y + dir.y * MAX_RAY_LENGTH;
+
+    return result;
 }
 
 #include <math.h>
