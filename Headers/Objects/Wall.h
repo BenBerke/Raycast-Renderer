@@ -12,6 +12,7 @@ typedef struct {
     Vector2 position;
     Vector2 scale;
     Vector3 color;
+    int texture;
 } Wall;
 
 #endif //RAYCAST_RENDERER_WALL_H
