@@ -11,6 +11,7 @@ typedef struct {
     float distance;
     unsigned char r, g, b;
     char side; // 0 North, 1 South, 2 West, 3 East
+    float u;
 } RayReturn;
 
 RayReturn raycast_create_ray(Ray* r, Player* p, Vector2 dir, const WallsList* list);

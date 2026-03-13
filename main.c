@@ -33,10 +33,10 @@ void movement(const InputManager* inputManager, Player* p) {
     if (input_manager_get_key(inputManager, SDL_SCANCODE_D)) {
         player_add_velocity(p, vector2_multiply_with_float(right, -p->speed));
     }
-    if (input_manager_get_key(inputManager, SDL_SCANCODE_RIGHT)) {
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_RIGHT) || input_manager_get_key(inputManager, SDL_SCANCODE_E)) {
         p->angle -= PLAYER_ROT_SPEED;
     }
-    if (input_manager_get_key(inputManager, SDL_SCANCODE_LEFT)) {
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_LEFT) || input_manager_get_key(inputManager, SDL_SCANCODE_Q)) {
         p->angle += PLAYER_ROT_SPEED;
     }
 }
@@ -78,12 +78,17 @@ int main(){
     Renderer renderer = create_renderer(window, _renderer);
 
     SDL_Texture *skyBoxTexture = IMG_LoadTexture(renderer.renderer, "Assets/skybox.png");
-    if (!skyBoxTexture) SDL_Log("IMG_LoadTexture failed: %s", SDL_GetError());
-    float texW, texH;
-    SDL_GetTextureSize(skyBoxTexture, &texW, &texH);
+    if (!skyBoxTexture) SDL_Log("IMG_LoadTexture Skybox failed: %s", SDL_GetError());
+    float skyBoxtexW, skyBoxtexH;
+    SDL_GetTextureSize(skyBoxTexture, &skyBoxtexW, &skyBoxtexH);
+
+    SDL_Texture *wallTexture = IMG_LoadTexture(renderer.renderer, "Assets/wall.png");
+    if (!wallTexture) SDL_Log("IMG_LoadTexture Wall failed: %s", SDL_GetError());
+    float wallTexW, wallTexH;
+    SDL_GetTextureSize(wallTexture, &wallTexW, &wallTexH);
 
     const float targetH = SCREEN_HEIGHT;
-    const float targetW = texW *  SCREEN_HEIGHT / texH;
+    const float targetW = skyBoxtexW *  SCREEN_HEIGHT / skyBoxtexH;
 
     SDL_FRect skyBoxRect = {0, 0, targetW, targetH };
 
@@ -205,11 +210,13 @@ int main(){
             if (t < 0.0f) t = 0.0f;
             if (t > 1.0f) t = 1.0f;
 
+
             float brightness = ambient + (1.0f - ambient) * (1.0f - t);
             switch (rayReturn.side) {
                 case 0: break;
-                case 2: case 3: brightness *= .7f; break;
-                case 4: brightness *= .3f; break;
+                case 1: brightness *= .3f; break;
+                case 2: brightness *= .7f; break;
+                case 3: brightness *= .7f; break;
                 default: break;
             }
 
@@ -217,7 +224,20 @@ int main(){
             Uint8 g = (Uint8)(rayReturn.g * brightness);
             Uint8 b = (Uint8)(rayReturn.b * brightness);
 
-            SDL_SetRenderDrawColor(renderer.renderer, r, g, b, 255);
+            // SDL_SetRenderDrawColor(renderer.renderer, r, g, b, 255);
+            //
+            // SDL_FRect slice = {
+            //     (float)xStart,
+            //     y1,
+            //     (float)(xEnd - xStart),
+            //     y2 - y1
+            // };
+            //
+            // int texX = (int)(rayReturn.u);
+            // if (texX < 0) texX = 0;
+            // if (texX >= wallTexW) texX = wallTexH - 1;
+            //
+            // SDL_RenderFillRect(renderer.renderer, &slice);
 
             SDL_FRect slice = {
                 (float)xStart,
@@ -226,7 +246,23 @@ int main(){
                 y2 - y1
             };
 
-            SDL_RenderFillRect(renderer.renderer, &slice);
+            int texX = (int)(rayReturn.u * wallTexW);
+            if (texX < 0) texX = 0;
+            if (texX >= (int)wallTexW) texX = (int)wallTexW - 1;
+            
+            if (rayReturn.side == 0 || rayReturn.side == 2) {
+                texX = (int)wallTexW - 1 - texX;
+            }
+
+            SDL_FRect src = {
+                (float)texX,
+                0.0f,
+                1.0f,
+                wallTexH
+            };
+
+            SDL_SetTextureColorMod(wallTexture, r, g, b);
+            SDL_RenderTexture(renderer.renderer, wallTexture, &src, &slice);
 
             if (debug) {
                 debugSquare_set_position(&debugSquaresList.items[i], ray.position);
