@@ -17,6 +17,24 @@
 static Uint32 fpsTimer = 0;
 static int frames = 0;
 
+static char* assetsLocation = "Assets/";
+
+typedef struct {
+    SDL_Texture *texture;
+    float width, height;
+} Texture;
+
+void create_texture(Texture* texture, const char* texturePath, const Renderer* renderer) {
+    char fullPath[strlen(assetsLocation) + strlen(texturePath) + strlen(".png") + 1];
+    snprintf(fullPath, sizeof(fullPath), "Assets/%s.png", texturePath);
+    texture->texture = IMG_LoadTexture(renderer->renderer, fullPath);
+    if (!texture->texture) {
+        SDL_Log("IMG_LoadTexture %s failed: %s", texturePath, SDL_GetError());
+        return;
+    }
+    SDL_GetTextureSize(texture->texture,&texture->width, &texture->height);
+}
+
 void movement(const InputManager* inputManager, Player* p) {
     const Vector2 forward = { cosf(p->angle), sinf(p->angle) };
     const Vector2 right = { -sinf(p->angle), cosf(p->angle) };
@@ -77,19 +95,14 @@ int main(){
 
     Renderer renderer = create_renderer(window, _renderer);
 
-    SDL_Texture *skyBoxTexture = IMG_LoadTexture(renderer.renderer, "Assets/skybox.png");
-    if (!skyBoxTexture) SDL_Log("IMG_LoadTexture Skybox failed: %s", SDL_GetError());
-    float skyBoxtexW, skyBoxtexH;
-    SDL_GetTextureSize(skyBoxTexture, &skyBoxtexW, &skyBoxtexH);
+    Texture skyBoxTexture = {0, 0, 0};
+    create_texture(&skyBoxTexture, "skybox", &renderer);
+    Texture wallTexture = {0, 0, 0};
+    create_texture(&wallTexture, "wall", &renderer);
 
-    SDL_Texture *wallTexture = IMG_LoadTexture(renderer.renderer, "Assets/wall.png");
-    if (!wallTexture) SDL_Log("IMG_LoadTexture Wall failed: %s", SDL_GetError());
-    float wallTexW, wallTexH;
-    SDL_GetTextureSize(wallTexture, &wallTexW, &wallTexH);
 
     const float targetH = SCREEN_HEIGHT;
-    const float targetW = skyBoxtexW *  SCREEN_HEIGHT / skyBoxtexH;
-
+    const float targetW = skyBoxTexture.width *  SCREEN_HEIGHT / skyBoxTexture.height;
     SDL_FRect skyBoxRect = {0, 0, targetW, targetH };
 
     // ------------------------------------------------------------//
@@ -169,9 +182,9 @@ int main(){
         player_update(&p);
         physics_check_collisions(&p, &wallsList);
 
-        begin_frame(&renderer, skyBoxTexture, &skyBoxRect);
+        begin_frame(&renderer, skyBoxTexture.texture, &skyBoxRect);
 
-        renderer_draw_wall(wallTexture, wallTexW, wallTexH, &renderer, &p, &wallsList);
+        renderer_draw_wall(wallTexture.texture, wallTexture.width, wallTexture.height, &renderer, &p, &wallsList);
 
         if (debug) {
             render_debug_walls(&renderer, &wallsList);
