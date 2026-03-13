@@ -10,9 +10,10 @@
 #define SCREEN_HEIGHT 800
 
 #define RAY_SIZE 0.1f
+#define MAX_RAY_LENGTH 1000
 
 #define FOV 60
-#define RAY_COUNT SCREEN_WIDTH
+#define RAY_COUNT 200
 
 #define FPS 60
 #define FRAME_DELAY (1000 / FPS)

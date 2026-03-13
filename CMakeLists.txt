@@ -3,7 +3,8 @@ project(Raycast_Renderer LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(Raycast_Renderer main.c
+add_executable(Raycast_Renderer
+        main.c
         config.h
         src/Systems/Renderer.c
         Headers/Systems/Renderer.h
@@ -26,5 +27,9 @@ add_executable(Raycast_Renderer main.c
 )
 
 find_package(SDL3 CONFIG REQUIRED)
+find_package(SDL3_image CONFIG REQUIRED)
 
-target_link_libraries(Raycast_Renderer PRIVATE SDL3::SDL3)
+target_link_libraries(Raycast_Renderer PRIVATE
+        SDL3::SDL3
+        $<IF:$<TARGET_EXISTS:SDL3_image::SDL3_image-shared>,SDL3_image::SDL3_image-shared,SDL3_image::SDL3_image-static>
+)

@@ -5,7 +5,11 @@
 #include "../../config.h"
 #include "../../Headers/Systems/Renderer.h"
 
+#include <math.h>
 #include <stdlib.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3/SDL_surface.h>
 
 void render_create_debugSquares_list(DebugSquaresList* list, int chunkSize) {
     list->count = 0;
@@ -36,11 +40,13 @@ Renderer create_renderer(SDL_Window *window, SDL_Renderer *renderer) {
     return r;
 }
 
-void begin_frame(const Renderer *renderer) {
+void begin_frame(const Renderer *renderer, SDL_Texture* skyBox, const SDL_FRect* dst) {
     SDL_Renderer* r = renderer->renderer;
     SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
     SDL_RenderClear(r);
-    render_draw_grid_line(renderer);
+
+    SDL_RenderTexture(renderer->renderer, skyBox, NULL, dst);
+    //render_draw_grid_line(renderer);
 }
 
 void end_frame(const Renderer *renderer) {
@@ -115,4 +121,5 @@ void render_draw_grid_line(const Renderer *renderer) {
     SDL_RenderLine(renderer->renderer, SCREEN_WIDTH/2, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT);
     SDL_RenderLine(renderer->renderer, 0, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT/2);
 }
+
 

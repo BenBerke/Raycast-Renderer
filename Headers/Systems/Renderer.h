@@ -25,10 +25,9 @@ typedef struct{
     int size;
     int chunkSize;
 } DebugSquaresList;
-
 Renderer create_renderer(SDL_Window *window, SDL_Renderer *renderer);
 
-void begin_frame(const Renderer *renderer);
+void begin_frame(const Renderer *renderer, SDL_Texture* skyBox, const SDL_FRect* dst);
 void end_frame(const Renderer *renderer);
 void destroy_renderer(const Renderer *renderer);
 
@@ -42,6 +41,7 @@ void render_push_debugSquares_list(DebugSquaresList* list, DebugSquare* value);
 void render_pop_debugSquares_list(DebugSquaresList* list);
 void render_free_debugSquares_list(DebugSquaresList* list);
 void render_debugSquares(Renderer* renderer, const DebugSquaresList* squares);
+
 
 
 #endif //RAYCAST_RENDERER_RENDERER_H
