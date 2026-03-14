@@ -110,8 +110,9 @@ int main(void) {
     };
 
     Object objects[] = {
-        {{0, 0}, {10, 10},{255, 255, 255}, humanTexture},
-{{0, 190}, {10, 10},{255, 255, 255}, humanTexture}
+        {{0, 0}, {5.5f, 1},{5, 255, 180}, humanTexture},
+        {{0, 190}, {1, 1},{255, 255, 255}, humanTexture},
+        {{80, 190}, {1, 3},{25, 25, 255}, humanTexture}
     };
 
     const int wallCount = sizeof(walls) / sizeof(walls[0]);

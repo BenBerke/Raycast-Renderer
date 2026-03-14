@@ -17,7 +17,7 @@ typedef struct {
 
 typedef struct {
     Vector2 position;
-    Vector2 size;
+    Vector2 scale;
     Vector3 color;
     int texture;
 } Object;

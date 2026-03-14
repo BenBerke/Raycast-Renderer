@@ -147,6 +147,11 @@ void renderer_draw(
     const float wallWorldHeight = WALL_HEIGHT;
 
     float columnDepthBuffer[RAY_COUNT];
+    float columnTopBuffer[RAY_COUNT];
+    for (int i = 0; i < RAY_COUNT; i++) {
+        columnDepthBuffer[i] = 1e9f;
+        columnTopBuffer[i] = SCREEN_HEIGHT; // no wall = nothing blocking
+    }
     for (int i = 0; i < RAY_COUNT; i++) {
         columnDepthBuffer[i] = 1e9f;
     }
@@ -243,7 +248,10 @@ void renderer_draw(
             SDL_SetTextureColorMod(wallTexture, r, g, b);
             SDL_RenderTexture(renderer->renderer, wallTexture, &src, &dst);
 
-            columnDepthBuffer[rayIndex] = hit.distance;
+            if (hit.distance < columnDepthBuffer[rayIndex]) {
+                columnDepthBuffer[rayIndex] = hit.distance;
+                columnTopBuffer[rayIndex] = y1;
+            }
         }
 
         if (debugSquares != NULL && rayIndex < debugSquares->count) {
@@ -275,7 +283,12 @@ void renderer_draw(
 
         float screenX = (SCREEN_WIDTH / 2.0f) * (1.0f - tanf(relativeAngle) / tanf(fovRadians / 2.0f));
         float correctedDistance = distance * cosf(relativeAngle);
-        float spriteHeight = (WALL_HEIGHT / correctedDistance) * projectionPlane;
+
+        float baseHeight    = (WALL_HEIGHT / correctedDistance) * projectionPlane;
+        float spriteHeight  = baseHeight * currentObject.scale.y;
+
+        float spriteBottom  = (SCREEN_HEIGHT / 2.0f) + baseHeight / 2.0f; // always fixed
+        float spriteTop     = spriteBottom - spriteHeight;
 
         if (currentObject.texture < 0 || currentObject.texture >= texturesList->count) {
             continue;
@@ -284,12 +297,11 @@ void renderer_draw(
         SDL_Texture* spriteTexture = texturesList->items[currentObject.texture].texture;
         if (spriteTexture == NULL) continue;
 
-        float texWidth  = (float)texturesList->items[currentObject.texture].width;
-        float texHeight = (float)texturesList->items[currentObject.texture].height;
+        float texWidth  = texturesList->items[currentObject.texture].width;
+        float texHeight = texturesList->items[currentObject.texture].height;
 
-        float spriteWidth = spriteHeight * (texWidth / texHeight);
+        float spriteWidth = spriteHeight * (texWidth / texHeight) * currentObject.scale.x;
         float spriteLeft  = screenX - spriteWidth / 2.0f;
-        float spriteTop   = (SCREEN_HEIGHT / 2.0f) - spriteHeight / 2.0f;
 
         int colStart = (int)floorf(spriteLeft);
         int colEnd   = (int)ceilf(spriteLeft + spriteWidth);
@@ -299,8 +311,12 @@ void renderer_draw(
         float fade = correctedDistance / maxDist;
         if (fade < 0.0f) fade = 0.0f;
         if (fade > 1.0f) fade = 1.0f;
-        Uint8 brightness = (Uint8)((ambient + (1.0f - ambient) * (1.0f - fade)) * 255.0f);
-        SDL_SetTextureColorMod(spriteTexture, brightness, brightness, brightness);
+
+        float brightnessF = ambient + (1.0f - ambient) * (1.0f - fade);
+        Uint8 r = (Uint8)(currentObject.color.x * brightnessF);
+        Uint8 g = (Uint8)(currentObject.color.y * brightnessF);
+        Uint8 b = (Uint8)(currentObject.color.z * brightnessF);
+        SDL_SetTextureColorMod(spriteTexture, r, g, b);
 
         for (int col = colStart; col < colEnd; col++) {
             if (col < 0 || col >= SCREEN_WIDTH) continue;
@@ -309,18 +325,28 @@ void renderer_draw(
             if (bufferIndex < 0) bufferIndex = 0;
             if (bufferIndex >= RAY_COUNT) bufferIndex = RAY_COUNT - 1;
 
-            if (correctedDistance >= columnDepthBuffer[bufferIndex]) continue;
+            // Determine how much of the column is visible
+            float clipBottom = SCREEN_HEIGHT;
+            if (correctedDistance >= columnDepthBuffer[bufferIndex]) {
+                clipBottom = columnTopBuffer[bufferIndex]; // only render above wall top
+            }
+
+            float dstTop    = spriteTop;
+            float dstBottom = spriteTop + spriteHeight;
+            if (dstBottom > clipBottom) dstBottom = clipBottom;
+            if (dstTop >= dstBottom) continue; // fully hidden behind wall
+
+            // Adjust src Y to match the clipped dst
+            float srcYStart  = (dstTop - spriteTop) / spriteHeight * texHeight;
+            float srcYHeight = (dstBottom - dstTop) / spriteHeight * texHeight;
 
             float t = (float)(col - colStart) / spriteWidth;
             float srcX = t * texWidth;
 
-            SDL_FRect src = { srcX, 0.0f, 1.0f, texHeight };
-            SDL_FRect dst = { (float)col, spriteTop, 1.0f, spriteHeight };
+            SDL_FRect src = { srcX, srcYStart, 1.0f, srcYHeight };
+            SDL_FRect dst = { (float)col, dstTop, 1.0f, dstBottom - dstTop };
 
             SDL_RenderTexture(renderer->renderer, spriteTexture, &src, &dst);
         }
-
-
     }
-
 }
