@@ -154,9 +154,15 @@ void renderer_draw(
     for (int rayIndex = 0; rayIndex < RAY_COUNT; rayIndex++) {
         columnDepthBuffer[rayIndex]  = 1e9f;
         columnWallCounts[rayIndex]   = 0;
+        float screenX = (RAY_COUNT / 2.0f - rayIndex) * sliceWidth;
+        float adj = projectionPlane;
+        float opp = screenX;
+        float ang = atan2f(opp, adj);
         Ray nearestRay = {{player->position.x, player->position.y}};
-        const float rayAngle = player->angle + fovRadians / 2.0f - (float)rayIndex * step;
+        const float rayAngle = player->angle + ang;
         const Vector2 dir = { cosf(rayAngle), sinf(rayAngle) };
+
+        ang = atanf( opp / adj );
 
         RayReturn hits[MAX_WALL_OVERLAP];
         const int hitCount = raycast_collect_hits(
@@ -181,7 +187,7 @@ void renderer_draw(
         for (int hitIndex = 0; hitIndex < hitCount; hitIndex++) {
             const RayReturn hit = hits[hitIndex];
 
-            float correctedDistance = hit.distance * cosf(rayAngle - player->angle);
+            float correctedDistance = hit.distance * cosf(ang);
             if (correctedDistance < 0.5f) {
                 correctedDistance = 0.001f;
             }

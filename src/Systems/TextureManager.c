@@ -44,7 +44,7 @@ void textureManager_pop_textures_list(TexturesList* list) {
     }
 }
 
-void textureManager_free_textureslist(TexturesList* list) {
+void textureManager_free_textures_list(TexturesList* list) {
     for (int i = 0; i < list->count; i++) SDL_DestroyTexture(list->items[i].texture);
     free(list->items);
     list->items = NULL;

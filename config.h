@@ -12,11 +12,8 @@
 #define RAY_SIZE 0.1f
 #define MAX_RAY_LENGTH 1500
 
-#define FOV 60
-#define RAY_COUNT 90
-
 #define FOV 120
-#define RAY_COUNT 200
+#define RAY_COUNT SCREEN_WIDTH
 
 #define PLAYER_SPEED 5
 #define PLAYER_ROT_SPEED 0.05f
