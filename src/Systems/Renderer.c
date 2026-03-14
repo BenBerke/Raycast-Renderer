@@ -147,13 +147,13 @@ void renderer_draw(
     const float wallWorldHeight = WALL_HEIGHT;
 
     float columnDepthBuffer[RAY_COUNT];
-    float columnTopBuffer[RAY_COUNT];
+    static float columnWallDists[RAY_COUNT][MAX_WALL_OVERLAP];
+    static float columnWallTops[RAY_COUNT][MAX_WALL_OVERLAP];
+    static int columnWallCounts[RAY_COUNT];
+
     for (int i = 0; i < RAY_COUNT; i++) {
-        columnDepthBuffer[i] = 1e9f;
-        columnTopBuffer[i] = SCREEN_HEIGHT; // no wall = nothing blocking
-    }
-    for (int i = 0; i < RAY_COUNT; i++) {
-        columnDepthBuffer[i] = 1e9f;
+        columnDepthBuffer[i]  = 1e9f;
+        columnWallCounts[i]   = 0;
     }
 
     for (int rayIndex = 0; rayIndex < RAY_COUNT; rayIndex++) {
@@ -250,7 +250,11 @@ void renderer_draw(
 
             if (hit.distance < columnDepthBuffer[rayIndex]) {
                 columnDepthBuffer[rayIndex] = hit.distance;
-                columnTopBuffer[rayIndex] = y1;
+            }
+            if (columnWallCounts[rayIndex] < MAX_WALL_OVERLAP) {
+                int idx = columnWallCounts[rayIndex]++;
+                columnWallDists[rayIndex][idx] = hit.distance;
+                columnWallTops[rayIndex][idx]  = y1;
             }
         }
 
@@ -275,8 +279,7 @@ void renderer_draw(
         float dx = currentObject.position.x - player->position.x;
         float dy = currentObject.position.y - player->position.y;
         float objectAngle = atan2f(dy, dx);
-        float pAngleRad = player->angle ;
-        float relativeAngle = objectAngle - pAngleRad;
+        float relativeAngle = objectAngle - player->angle;
 
         while (relativeAngle <= -M_PI) relativeAngle += 2 * M_PI;
         while (relativeAngle > M_PI)  relativeAngle -= 2 * M_PI;
@@ -325,22 +328,25 @@ void renderer_draw(
             if (bufferIndex < 0) bufferIndex = 0;
             if (bufferIndex >= RAY_COUNT) bufferIndex = RAY_COUNT - 1;
 
-            // Determine how much of the column is visible
-            float clipBottom = SCREEN_HEIGHT;
-            if (correctedDistance >= columnDepthBuffer[bufferIndex]) {
-                clipBottom = columnTopBuffer[bufferIndex]; // only render above wall top
+            // Find highest wall top (min Y) among walls CLOSER than this sprite
+            float clipTop = SCREEN_HEIGHT;
+            for (int w = 0; w < columnWallCounts[bufferIndex]; w++) {
+                if (columnWallDists[bufferIndex][w] < correctedDistance) {
+                    if (columnWallTops[bufferIndex][w] < clipTop) {
+                        clipTop = columnWallTops[bufferIndex][w];
+                    }
+                }
             }
 
             float dstTop    = spriteTop;
             float dstBottom = spriteTop + spriteHeight;
-            if (dstBottom > clipBottom) dstBottom = clipBottom;
-            if (dstTop >= dstBottom) continue; // fully hidden behind wall
+            if (dstBottom > clipTop) dstBottom = clipTop;
+            if (dstTop >= dstBottom) continue;
 
-            // Adjust src Y to match the clipped dst
             float srcYStart  = (dstTop - spriteTop) / spriteHeight * texHeight;
             float srcYHeight = (dstBottom - dstTop) / spriteHeight * texHeight;
 
-            float t = (float)(col - colStart) / spriteWidth;
+            float t    = (float)(col - colStart) / spriteWidth;
             float srcX = t * texWidth;
 
             SDL_FRect src = { srcX, srcYStart, 1.0f, srcYHeight };
