@@ -10,6 +10,12 @@ float vector2_length(const Vector2 vector) {
     return sqrtf(vector.x * vector.x + vector.y * vector.y);
 }
 
+float vector2_distance(const Vector2 vector1, const Vector2 vector2) {
+    float y = vector1.y - vector2.y;
+    float x = vector1.x - vector2.x;
+    return sqrtf(x * x + y * y);
+}
+
 Vector2 vector2_add(const Vector2 vector1, const Vector2 vector2) {
     Vector2 result = {vector1.x + vector2.x, vector1.y + vector2.y};
     return result;

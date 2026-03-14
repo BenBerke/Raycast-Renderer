@@ -3,6 +3,7 @@
 
 #include "../Objects/Player.h"
 #include "../Objects/Wall.h"
+#include "../Objects/Object.h"
 
 typedef struct WallsList {
     Wall* items;

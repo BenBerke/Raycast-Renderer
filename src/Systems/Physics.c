@@ -38,12 +38,12 @@ void physics_free_walls_list(WallsList* list) {
     list->chunkSize = 0;
 }
 
-void physics_check_collisions(Player* player, const WallsList* list) {
+void physics_check_collisions(Player* player, const WallsList* walls) {
     const float half = player->scale / 2.0f;
     const float epsilon = 0.001f;
 
-    for (int i = 0; i < list->count; i++) {
-        const Wall* wall = &list->items[i];
+    for (int i = 0; i < walls->count; i++) {
+        const Wall* wall = &walls->items[i];
 
         const float px = player->position.x;
         const float py = player->position.y;

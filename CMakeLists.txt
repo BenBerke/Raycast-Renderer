@@ -26,9 +26,9 @@ add_executable(Raycast_Renderer
         Headers/Objects/Ray.h
         src/Systems/TextureManager.c
         Headers/Systems/TextureManager.h
-        src/Objects/GameObject.c
-        Headers/Objects/GameObject.h
-        src/Objects/GameObject.c
+        src/Objects/Object.c
+        Headers/Objects/Object.h
+        src/Objects/Object.c
 )
 
 find_package(SDL3 CONFIG REQUIRED)

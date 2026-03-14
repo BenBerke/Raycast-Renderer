@@ -6,6 +6,8 @@
 #include "Headers/Systems/InputManager.h"
 #include "Headers/Systems/Physics.h"
 #include "Headers/Systems/TextureManager.h"
+#include "Headers/Objects/Object.h"
+
 
 static Uint32 fpsTimer = 0;
 static int frames = 0;
@@ -79,6 +81,7 @@ int main(void) {
     int skyBoxTexture = create_texture("skybox", &textures, renderer.renderer);
     int wallTexture = create_texture("wall", &textures, renderer.renderer);
     int woodTexture = create_texture("wood", &textures, renderer.renderer);
+    int humanTexture = create_texture("human", &textures, renderer.renderer);
 
     const float skyDstHeight = SCREEN_HEIGHT;
     const float skyDstWidth = textures.items[skyBoxTexture].width * SCREEN_HEIGHT / textures.items[skyBoxTexture].height;
@@ -92,20 +95,32 @@ int main(void) {
     DebugSquaresList debugSquaresList;
     render_create_debugSquares_list(&debugSquaresList, 8);
 
-    Wall walls[] = {
-        {{-260, 220}, {220, 40}, {255, 80, 80}, wallTexture, 2.0f},
-        {{40, 220},   {180, 40}, {255, 170, 60}, wallTexture, 1.5f},
-        {{280, 220},  {140, 40}, {255, 230, 90}, wallTexture, 1.0f},
+    ObjectsList objectsList;
+    objects_create_objects_list(&objectsList, 8);
 
-        {{-320, 120}, {40, 160}, {80, 220, 120}, woodTexture, .1f},
-        {{-220, 100}, {140, 40}, {70, 180, 255}, woodTexture, 1.6f},
+    Wall walls[] = {
+           {{-260, 220}, {220, 40}, {255, 80, 80}, wallTexture, 2.0f},
+         {{40, 220},   {180, 40}, {255, 170, 60}, woodTexture, 1.5f},
+           {{280, 220},  {140, 40}, {255, 230, 90}, wallTexture, 1.0f},
+
+        {{-320, 120}, {40, 160}, {80, 220, 120}, woodTexture, .8f},
+        {{-220, 100}, {140, 40}, {70, 180, 255}, wallTexture, 1.6f},
         {{-120, 20},  {40, 120}, {90, 120, 255}, woodTexture, 8.0f},
-        {{-260, -40}, {180, 40}, {140, 100, 255}, woodTexture, 1.2f},
+       {{-260, -40}, {180, 40}, {140, 100, 255}, wallTexture, 1.2f},
     };
 
-    const int wallCount = (sizeof(walls) / sizeof(walls[0]));
+    Object objects[] = {
+        {{0, 0}, {10, 10},{255, 255, 255}, humanTexture},
+{{0, 190}, {10, 10},{255, 255, 255}, humanTexture}
+    };
+
+    const int wallCount = sizeof(walls) / sizeof(walls[0]);
     for (int i = 0; i < wallCount; i++) {
         physics_push_walls_list(&wallsList, &walls[i]);
+    }
+    const int objectCount = sizeof(objects) / sizeof(objects[0]);
+    for (int i = 0; i < objectCount; i++) {
+        objects_push_objects_list(&objectsList, &objects[i]);
     }
 
     for (int i = 0; i < RAY_COUNT; i++) {
@@ -133,12 +148,13 @@ int main(void) {
 
         begin_frame(&renderer, textures.items[skyBoxTexture].texture, &skyBoxRect);
 
-        renderer_draw_walls(
+        renderer_draw(
             &textures,
             &player,
             &wallsList,
             &debugSquaresList,
-            &renderer
+            &renderer,
+            &objectsList
         );
 
         if (debug) {
@@ -171,6 +187,7 @@ int main(void) {
     physics_free_walls_list(&wallsList);
     render_free_debugSquares_list(&debugSquaresList);
     textureManager_free_walls_list(&textures);
+    objects_free_objects_list(&objectsList);
 
     destroy_renderer(&renderer);
     SDL_DestroyWindow(window);

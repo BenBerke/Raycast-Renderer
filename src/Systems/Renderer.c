@@ -4,9 +4,6 @@
 
 #include "../../config.h"
 #include "../../Headers/Systems/Renderer.h"
-
-#include <stdio.h>
-
 #include "../../Headers/Systems/Raycast.h"
 
 Renderer create_renderer(SDL_Window* window, SDL_Renderer* renderer) {
@@ -135,18 +132,24 @@ void render_draw_grid_line(const Renderer* renderer) {
     SDL_RenderLine(renderer->renderer, 0.0f, SCREEN_HEIGHT / 2.0f, SCREEN_WIDTH, SCREEN_HEIGHT / 2.0f);
 }
 
-void renderer_draw_walls(
+void renderer_draw(
     const TexturesList* texturesList,
     const Player* player,
     const WallsList* walls,
-    DebugSquaresList* debugSquares,
-    const Renderer* renderer
+    const DebugSquaresList* debugSquares,
+    const Renderer* renderer,
+    ObjectsList* objects
 ) {
     const float fovRadians = FOV * ((float)M_PI / 180.0f);
     const float step = fovRadians / (float)(RAY_COUNT - 1);
-    const float projectionPlane = (SCREEN_WIDTH / 2.0f) / tanf(fovRadians / 2.0f);
+    const float projectionPlane = SCREEN_WIDTH / 2.0f / tanf(fovRadians / 2.0f);
     const float sliceWidth = (float)SCREEN_WIDTH / (float)RAY_COUNT;
     const float wallWorldHeight = WALL_HEIGHT;
+
+    float columnDepthBuffer[RAY_COUNT];
+    for (int i = 0; i < RAY_COUNT; i++) {
+        columnDepthBuffer[i] = 1e9f;
+    }
 
     for (int rayIndex = 0; rayIndex < RAY_COUNT; rayIndex++) {
         Ray nearestRay = {{player->position.x, player->position.y}};
@@ -177,8 +180,8 @@ void renderer_draw_walls(
             const RayReturn hit = hits[hitIndex];
 
             float correctedDistance = hit.distance * cosf(rayAngle - player->angle);
-            if (correctedDistance < 0.001f) {
-                correctedDistance = 0.001f;
+            if (correctedDistance < .5f) {
+                continue;
             }
 
             const float wallHeight = (wallWorldHeight / correctedDistance) * projectionPlane;
@@ -239,10 +242,85 @@ void renderer_draw_walls(
 
             SDL_SetTextureColorMod(wallTexture, r, g, b);
             SDL_RenderTexture(renderer->renderer, wallTexture, &src, &dst);
+
+            columnDepthBuffer[rayIndex] = hit.distance;
         }
 
         if (debugSquares != NULL && rayIndex < debugSquares->count) {
             debugSquares->items[rayIndex].position = nearestRay.position;
         }
     }
+    for (int a = 0; a < objects->count - 1; a++) {
+        for (int b = a + 1; b < objects->count; b++) {
+            float distA = vector2_distance(player->position, objects->items[a].position);
+            float distB = vector2_distance(player->position, objects->items[b].position);
+            if (distB > distA) {
+                Object tmp = objects->items[a];
+                objects->items[a] = objects->items[b];
+                objects->items[b] = tmp;
+            }
+        }
+    }
+    for (int i = 0; i < objects->count; i++) {
+        const Object currentObject = objects->items[i];
+        const float distance = vector2_distance(player->position, currentObject.position);
+        float dx = currentObject.position.x - player->position.x;
+        float dy = currentObject.position.y - player->position.y;
+        float objectAngle = atan2f(dy, dx);
+        float pAngleRad = player->angle ;
+        float relativeAngle = objectAngle - pAngleRad;
+
+        while (relativeAngle <= -M_PI) relativeAngle += 2 * M_PI;
+        while (relativeAngle > M_PI)  relativeAngle -= 2 * M_PI;
+
+        float screenX = (SCREEN_WIDTH / 2.0f) * (1.0f - tanf(relativeAngle) / tanf(fovRadians / 2.0f));
+        float correctedDistance = distance * cosf(relativeAngle);
+        float spriteHeight = (WALL_HEIGHT / correctedDistance) * projectionPlane;
+
+        if (currentObject.texture < 0 || currentObject.texture >= texturesList->count) {
+            continue;
+        }
+
+        SDL_Texture* spriteTexture = texturesList->items[currentObject.texture].texture;
+        if (spriteTexture == NULL) continue;
+
+        float texWidth  = (float)texturesList->items[currentObject.texture].width;
+        float texHeight = (float)texturesList->items[currentObject.texture].height;
+
+        float spriteWidth = spriteHeight * (texWidth / texHeight);
+        float spriteLeft  = screenX - spriteWidth / 2.0f;
+        float spriteTop   = (SCREEN_HEIGHT / 2.0f) - spriteHeight / 2.0f;
+
+        int colStart = (int)floorf(spriteLeft);
+        int colEnd   = (int)ceilf(spriteLeft + spriteWidth);
+
+        const float maxDist = 700.0f;
+        const float ambient = 0.4f;
+        float fade = correctedDistance / maxDist;
+        if (fade < 0.0f) fade = 0.0f;
+        if (fade > 1.0f) fade = 1.0f;
+        Uint8 brightness = (Uint8)((ambient + (1.0f - ambient) * (1.0f - fade)) * 255.0f);
+        SDL_SetTextureColorMod(spriteTexture, brightness, brightness, brightness);
+
+        for (int col = colStart; col < colEnd; col++) {
+            if (col < 0 || col >= SCREEN_WIDTH) continue;
+
+            int bufferIndex = (int)((float)col / ((float)SCREEN_WIDTH / (float)RAY_COUNT));
+            if (bufferIndex < 0) bufferIndex = 0;
+            if (bufferIndex >= RAY_COUNT) bufferIndex = RAY_COUNT - 1;
+
+            if (correctedDistance >= columnDepthBuffer[bufferIndex]) continue;
+
+            float t = (float)(col - colStart) / spriteWidth;
+            float srcX = t * texWidth;
+
+            SDL_FRect src = { srcX, 0.0f, 1.0f, texHeight };
+            SDL_FRect dst = { (float)col, spriteTop, 1.0f, spriteHeight };
+
+            SDL_RenderTexture(renderer->renderer, spriteTexture, &src, &dst);
+        }
+
+
+    }
+
 }

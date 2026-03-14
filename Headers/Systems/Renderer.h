@@ -5,6 +5,7 @@
 
 #include "../Objects/Player.h"
 #include "../Objects/DebugSquare.h"
+#include "../Objects/Object.h"
 #include "Physics.h"
 #include "TextureManager.h"
 
@@ -36,12 +37,15 @@ void render_debug_player(const Renderer* renderer, const Player* player);
 void render_debug_squares(const Renderer* renderer, const DebugSquaresList* squares);
 void render_draw_grid_line(const Renderer* renderer);
 
-void renderer_draw_walls(
+void renderer_draw(
     const TexturesList* texturesList,
     const Player* player,
     const WallsList* walls,
-    DebugSquaresList* debugSquares,
-    const Renderer* renderer
+    const DebugSquaresList* debugSquares,
+    const Renderer* renderer,
+    ObjectsList* objects
 );
+
+void renderer_draw_objects(ObjectsList* objectList, Player* p);
 
 #endif
