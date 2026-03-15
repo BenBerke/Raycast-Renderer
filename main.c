@@ -77,20 +77,8 @@ int main(void) {
         return 1;
     }
 
-    Renderer renderer = create_renderer(window, sdlRenderer);
-
     TexturesList textures;
     textureManager_create_textures_list(&textures,  8);
-
-    int skyBoxTexture = create_texture("skybox", &textures, renderer.renderer);
-    int wallTexture = create_texture("wall", &textures, renderer.renderer);
-    int woodTexture = create_texture("wood", &textures, renderer.renderer);
-    int humanTexture = create_texture("human", &textures, renderer.renderer);
-    int whiteTexture = create_texture("white", &textures, renderer.renderer);
-
-    const float skyDstHeight = SCREEN_HEIGHT;
-    const float skyDstWidth = textures.items[skyBoxTexture].width * SCREEN_HEIGHT / textures.items[skyBoxTexture].height;
-    const SDL_FRect skyBoxRect = {0.0f, 0.0f, skyDstWidth, skyDstHeight};
 
     InputManager inputManager = {0};
 
@@ -99,9 +87,6 @@ int main(void) {
 
     ObjectsList objectsList;
     objects_create_objects_list(&objectsList, 8);
-
-    LightsList lightsList;
-    lights_create_lights_list(&lightsList, 4);
 
     Wall walls[] = {
             {{-260, 220}, {220, 40}, {255, 255, 255, 255}, {wallTexture, wallTexture, wallTexture, wallTexture}, 2.0f, {1.0f, 1.0f, 1.0f, 1.0f}},
@@ -112,10 +97,6 @@ int main(void) {
         {{0, 0}, {1, 1},{255, 255, 255, 255}, humanTexture},
     };
 
-    Light lights[] = {
-        {{-220, 220-100}, 150.0f, 1.0f},
-    };
-
     const int wallCount = sizeof(walls) / sizeof(walls[0]);
     for (int i = 0; i < wallCount; i++) {
         physics_push_walls_list(&wallsList, &walls[i]);
@@ -124,11 +105,6 @@ int main(void) {
     for (int i = 0; i < objectCount; i++) {
         objects_push_objects_list(&objectsList, &objects[i]);
     }
-    const int lightCount = sizeof(lights) / sizeof(lights[0]);
-    for (int i = 0; i < lightCount; i++) {
-        light_push_lights_list(&lightsList, &lights[i]);
-    }
-
     Player player = {{0, 0}, PLAYER_SCALE, {0, 0}, PLAYER_SPEED, PLAYER_FRICTION, 0};
 
     bool running = true;
@@ -138,8 +114,8 @@ int main(void) {
         Uint32 startTime = SDL_GetTicks();
         float deltaTime = (float)(currentTime - lastTime) / 1000000000.0f;
         lastTime = currentTime;
-        input_manager_begin_frame(&inputManager);
 
+        input_manager_begin_frame(&inputManager);
         if (input_manager_get_key_down(&inputManager, SDL_SCANCODE_ESCAPE)) {
             running = false;
         }
@@ -149,31 +125,7 @@ int main(void) {
 
         player_update(&player);
         physics_check_collisions(&player, &wallsList);
-        //light_update(&lightsList, &wallsList);
 
-        begin_frame(&renderer, textures.items[skyBoxTexture].texture, &skyBoxRect);
-
-        renderer_draw(
-            &textures,
-            &player,
-            &wallsList,
-            &renderer,
-            &objectsList
-        );
-
-        if (debug) {
-            render_debug_walls(&renderer, &wallsList);
-            render_debug_player(&renderer, &player);
-            render_debug_lineOfSight(&renderer, &player, &wallsList);
-            render_debug_lights(&renderer, &lightsList, &wallsList);
-        }
-
-        SDL_SetRenderDrawColor(renderer.renderer, 255, 255, 255, 255);
-        SDL_SetRenderScale(renderer.renderer, 2.0f, 2.0f);
-        SDL_RenderDebugTextFormat(renderer.renderer, 10.0f, 10.0f, "FPS: %.2f", currentFps);
-        SDL_SetRenderScale(renderer.renderer, 1.0f, 1.0f);
-
-        end_frame(&renderer);
 
         Uint32 frameTime = SDL_GetTicks() - startTime;
         if (FRAME_DELAY > frameTime) {
@@ -192,9 +144,6 @@ int main(void) {
     physics_free_walls_list(&wallsList);
     textureManager_free_textures_list(&textures);
     objects_free_objects_list(&objectsList);
-    light_free_lights_list(&lightsList);
-
-    destroy_renderer(&renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
 

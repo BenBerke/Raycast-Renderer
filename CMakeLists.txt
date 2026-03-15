@@ -26,8 +26,6 @@ add_executable(Raycast_Renderer
         Headers/Systems/TextureManager.h
         src/Objects/Object.c
         Headers/Objects/Object.h
-        Headers/Objects/Light.h
-        src/Systems/Light.c
         src/Systems/Debugger.c
         Headers/Systems/Debugger.h
         Headers/Tools/Vector4.h
