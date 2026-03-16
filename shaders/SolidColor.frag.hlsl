@@ -1,12 +1,9 @@
-struct Input {
-
-};
-struct Output {
-    float4 Color : SV_Target0;
+struct PSInput {
+    float brightness : TEXCOORD0;
+    float4 pos : SV_Position;
 };
 
-Output main(Input input) {
-    Output output;
-    output.Color = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    return output;
+float4 main(PSInput input) : SV_Target0 {
+    float3 baseColor = float3(0.0, 1.0, 0.0);
+    return float4(baseColor * input.brightness, 1.0f);
 }

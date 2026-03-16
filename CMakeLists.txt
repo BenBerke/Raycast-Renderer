@@ -50,7 +50,7 @@ if(NOT SHADERCROSS)
 endif()
 
 set(HLSL_SHADERS
-        "${CMAKE_SOURCE_DIR}/shaders/OnlyPosition.vert.hlsl"
+        "${CMAKE_SOURCE_DIR}/shaders/Raycast.vert.hlsl"
         "${CMAKE_SOURCE_DIR}/shaders/SolidColor.frag.hlsl"
 )
 

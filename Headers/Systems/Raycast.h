@@ -5,6 +5,7 @@
 
 #include "../Tools/Vector2.h"
 #include "../Objects/Player.h"
+#include "../AppState.h"
 #include "Physics.h"
 
 typedef struct {
@@ -16,7 +17,7 @@ typedef struct {
 
 
 void raycast_to_gpu_buffer(const Player* player, const WallsList* walls, RaySlice* outBuffer);
-
 bool ray_intersect_wall(Vector2 origin, Vector2 dir, const Wall* wall, float* outT, int* outSide);
+bool renderer_create_raySlice_data_buffer(AppState* state, RaySlice* raySlices, int sliceCount);
 
 #endif

@@ -14,8 +14,10 @@ typedef struct {
     SDL_GPUGraphicsPipeline* pipeline;
     Uint32 numVertices;
     Uint32 numIndices;
+    Uint32 numSlices;
     SDL_GPUBuffer* vertexBuffer;
     SDL_GPUBuffer* indexBuffer;
+    SDL_GPUBuffer* rayStorageBuffer;
     InputManager inputManager;
 } AppState;
 

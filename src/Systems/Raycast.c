@@ -78,6 +78,7 @@ void raycast_to_gpu_buffer(const Player* player, const WallsList* walls, RaySlic
 
             // Standard Wolfenstein perspective math
             outBuffer[i].wallHeight = (WALL_HEIGHT / correctedDist) * projectionPlane;
+            if (correctedDist < 0.001f) correctedDist = 0.001f;
 
             // Calculate U (horizontal texture mapping)
             float hitX = player->position.x + dir.x * nearestT;
@@ -93,7 +94,10 @@ void raycast_to_gpu_buffer(const Player* player, const WallsList* walls, RaySlic
             float ambient = 0.2f;
             outBuffer[i].brightness = ambient + (1.0f - ambient) * (1.0f - fminf(correctedDist / 1000.0f, 1.0f));
         } else {
-            outBuffer[i].wallHeight = 0.0f; // Don't draw if nothing hit
+            outBuffer[i].wallHeight = 0.0f;
+            outBuffer[i].u = 0.0f;
+            outBuffer[i].textureIndex = 0;
+            outBuffer[i].brightness = 0.0f;
         }
     }
 }
