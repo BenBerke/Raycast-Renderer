@@ -50,9 +50,9 @@ void raycast_to_gpu_buffer(const Player* player, const WallsList* walls, RaySlic
 
     for (int i = 0; i < RAY_COUNT; i++) {
         // 1. Calculate ray direction using atan2 logic to prevent fisheye
-        float screenX = (RAY_COUNT / 2.0f - i) * (SCREEN_WIDTH / RAY_COUNT);
-        float rayAngleOffset = atan2f(screenX, projectionPlane);
-        float rayAngle = player->angle + rayAngleOffset;
+        float cameraX = (2.0f * ((float)i + 0.5f) / (float)RAY_COUNT) - 1.0f;
+        float rayAngleOffset = atanf(cameraX * tanf(fovRadians * 0.5f));
+        float rayAngle = player->angle - rayAngleOffset;
         Vector2 dir = { cosf(rayAngle), sinf(rayAngle) };
 
         float nearestT = FLT_MAX;

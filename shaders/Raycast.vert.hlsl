@@ -21,9 +21,9 @@ VSOutput main(VSInput input, uint instanceID : SV_InstanceID) {
 
     RaySlice data = slices[instanceID];
 
-    float xBase = ((float)instanceID / 320.0f) * 2.0f - 1.0f;
     float stripWidth = 2.0f / 320.0f;
-    float finalX = xBase + (input.pos.x * stripWidth);
+    float xCenter = -1.0f + ((float(instanceID) + 0.5f) * stripWidth);
+    float finalX = xCenter + (input.pos.x * stripWidth);
 
     float finalY = input.pos.y * (data.wallHeight / 480.0f);
 

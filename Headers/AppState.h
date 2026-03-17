@@ -19,6 +19,10 @@ typedef struct {
     SDL_GPUBuffer* indexBuffer;
     SDL_GPUBuffer* rayStorageBuffer;
     InputManager inputManager;
+
+    SDL_GPUGraphicsPipeline* debugPipeline;
+    SDL_GPUBuffer* debugVertexBuffer;
+    Uint32 debugVertexCapacity;
 } AppState;
 
 #endif //RAYCAST_RENDERER_APPSTATE_H

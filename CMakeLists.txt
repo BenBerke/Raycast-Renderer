@@ -10,7 +10,6 @@ add_executable(Raycast_Renderer
         Headers/Systems/Renderer.h
         src/Tools/Vector2.c
         Headers/Tools/Vector2.h
-        Headers/Objects/Wall.h
         Headers/Tools/Vector3.h
         src/Tools/Vector3.c
         src/Systems/InputManager.c
@@ -28,6 +27,8 @@ add_executable(Raycast_Renderer
         Headers/Tools/Vector4.h
         src/Tools/Vector4.c
         Headers/AppState.h
+        src/Systems/Debugger.c
+        Headers/Systems/Debugger.h
 )
 
 find_package(SDL3 CONFIG REQUIRED)
@@ -52,6 +53,8 @@ endif()
 set(HLSL_SHADERS
         "${CMAKE_SOURCE_DIR}/shaders/Raycast.vert.hlsl"
         "${CMAKE_SOURCE_DIR}/shaders/SolidColor.frag.hlsl"
+        "${CMAKE_SOURCE_DIR}/shaders/Debug.vert.hlsl"
+        "${CMAKE_SOURCE_DIR}/shaders/Debug.frag.hlsl"
 )
 
 set(COMPILED_SHADERS "")

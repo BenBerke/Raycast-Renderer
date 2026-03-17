@@ -2,8 +2,16 @@
 #define RAYCAST_RENDERER_PHYSICS_H
 
 #include "../Objects/Player.h"
-#include "../Objects/Wall.h"
 #include "../Objects/Object.h"
+
+typedef struct {
+    Vector2 position;
+    Vector2 scale;
+    Vector4 color;
+    int textures[4];
+    float height;
+    float faceBrightness[4];
+} Wall;
 
 typedef struct WallsList {
     Wall* items;
