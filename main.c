@@ -20,6 +20,10 @@ typedef struct {
     float r, g, b, a;
 } Vertex;
 
+typedef struct {
+    float time;
+} UniformBuffer;
+
 static Vertex vertices[] = {
     {0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f},     // top vertex
     {-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f},   // bottom left vertex
@@ -148,7 +152,7 @@ int main(int argc, char* argv[]) {
         .num_samplers = 0,
         .num_storage_buffers = 0,
         .num_storage_textures = 0,
-        .num_uniform_buffers = 0,
+        .num_uniform_buffers = 1,
     };
     SDL_GPUShader* fragmentShader = SDL_CreateGPUShader(device, &fragmentInfo);
     if (!fragmentShader) {
@@ -201,6 +205,8 @@ int main(int argc, char* argv[]) {
     SDL_GPUGraphicsPipeline* graphicsPipeline = SDL_CreateGPUGraphicsPipeline(device, &pipeLineInfo);
     SDL_ReleaseGPUShader(device, vertexShader);
     SDL_ReleaseGPUShader(device, fragmentShader);
+
+    UniformBuffer timeBuffer = {0};
 
     Player player = {.position = {0, 0}, .scale = 15.0f, .velocity = {0, 0}, .speed = .1f, .friction = 3.0f, .angle = 0};
     InputManager inputManager = {0};
@@ -266,6 +272,9 @@ int main(int argc, char* argv[]) {
             },
         };
         SDL_BindGPUVertexBuffers(renderPass, 0, bufferBindings, sizeof(bufferBindings)/sizeof(bufferBindings[0]));
+
+        timeBuffer.time = SDL_GetTicksNS() / 1e9f;
+        SDL_PushGPUFragmentUniformData(commandBuffer, 0, &timeBuffer, sizeof(UniformBuffer));
         SDL_DrawGPUPrimitives(renderPass, sizeof(vertices)/sizeof(vertices[0]), 1, 0, 0);
 
         SDL_EndGPURenderPass(renderPass);
