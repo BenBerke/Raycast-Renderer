@@ -8,6 +8,10 @@
 #include "Physics.h"
 
 typedef struct {
+    float top;
+    float bottom;
+    float brightness;
+    float distance;
 } RaySlice;
 
 
