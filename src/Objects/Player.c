@@ -23,7 +23,7 @@ void player_add_velocity(Player *player, Vector2 velocity) {
     player->velocity = vector2_add(player->velocity, velocity);
 }
 
-Vector2 player_get_facing_dir(const Player* player) {
+Vector2 player_get_facing_dir(Player* player) {
     Vector2 dir = { cosf(player->angle), sinf(player->angle) };
     return dir;
 }
