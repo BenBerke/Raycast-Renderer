@@ -16,6 +16,7 @@ static Uint32 fpsTimer = 0;
 static int frames = 0;
 static float currentFps = 0.0f;
 
+<<<<<<< HEAD
 typedef struct {
     float x, y, z;
     float r, g, b, a;
@@ -39,12 +40,16 @@ static Vertex vertices[] = {
 
 
 static void movement(const InputManager* inputManager, Player* player, float deltaTime) {
+=======
+static void movement(const InputManager* inputManager, Player* player) {
+>>>>>>> parent of ca60d0c (Dekat Time)
     const Vector2 forward = { cosf(player->angle), sinf(player->angle) };
     const Vector2 right = { -sinf(player->angle), cosf(player->angle) };
 
     float moveAmount = 100.0f * deltaTime; // adjust this
 
     if (input_manager_get_key(inputManager, SDL_SCANCODE_W)) {
+<<<<<<< HEAD
         player->position = vector2_add(player->position, vector2_multiply_with_float(forward, moveAmount));
     }
     if (input_manager_get_key(inputManager, SDL_SCANCODE_S)) {
@@ -55,16 +60,37 @@ static void movement(const InputManager* inputManager, Player* player, float del
     }
     if (input_manager_get_key(inputManager, SDL_SCANCODE_A)) {
         player->position = vector2_add(player->position, vector2_multiply_with_float(right, -moveAmount));
+=======
+        player_add_velocity(player, vector2_multiply_with_float(forward, player->speed));
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_S)) {
+        player_add_velocity(player, vector2_multiply_with_float(forward, -player->speed));
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_D)) {
+        player_add_velocity(player, vector2_multiply_with_float(right, -player->speed));
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_A)) {
+        player_add_velocity(player, vector2_multiply_with_float(right, player->speed));
+>>>>>>> parent of ca60d0c (Dekat Time)
     }
 
     if (input_manager_get_key(inputManager, SDL_SCANCODE_RIGHT) ||
         input_manager_get_key(inputManager, SDL_SCANCODE_E)) {
+<<<<<<< HEAD
         player->angle -= PLAYER_ROT_SPEED * deltaTime;
         }
     if (input_manager_get_key(inputManager, SDL_SCANCODE_LEFT) ||
         input_manager_get_key(inputManager, SDL_SCANCODE_Q)) {
         player->angle += PLAYER_ROT_SPEED * deltaTime;
         }
+=======
+        player->angle -= PLAYER_ROT_SPEED;
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_LEFT) ||
+        input_manager_get_key(inputManager, SDL_SCANCODE_Q)) {
+        player->angle += PLAYER_ROT_SPEED;
+    }
+>>>>>>> parent of ca60d0c (Dekat Time)
 }
 
 int main(int argc, char* argv[]) {
@@ -126,6 +152,7 @@ int main(int argc, char* argv[]) {
     SDL_EndGPUCopyPass(copyPass);
     SDL_SubmitGPUCommandBuffer(cBuffer);
 
+<<<<<<< HEAD
     size_t vertexShaderCodeSize;
     void* vertexShaderCode = SDL_LoadFile("cmake-build-debug/shaders/triangle.vertex.dxil", &vertexShaderCodeSize);
     if (!vertexShaderCode) {
@@ -149,6 +176,12 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     SDL_free(vertexShaderCode);
+=======
+    int skyBoxTexture = create_texture("skybox", &textures, renderer.renderer);
+    int wallTexture = create_texture("wall", &textures, renderer.renderer);
+    int woodTexture = create_texture("wood", &textures, renderer.renderer);
+    int humanTexture = create_texture("human", &textures, renderer.renderer);
+>>>>>>> parent of ca60d0c (Dekat Time)
 
     size_t fragmentShaderCodeSize;
     void* fragmentShaderCode = SDL_LoadFile("cmake-build-debug/shaders/triangle.frag.dxil", &fragmentShaderCodeSize);
@@ -232,6 +265,7 @@ int main(int argc, char* argv[]) {
     WallsList wallsList;
     physics_create_walls_list(&wallsList, 8);
     Wall walls[] = {
+<<<<<<< HEAD
         {
             .position = {100.0f, 0.0f},
             .scale = {10.0f, 120.0f},
@@ -243,13 +277,29 @@ int main(int argc, char* argv[]) {
     };;
     for (int i = 0; i < sizeof(walls) / sizeof(walls[0]); i++) {
         physics_push_walls_list(&wallsList , &walls[i]);
+=======
+            {{-260, 220}, {220, 40}, {255, 255, 255, 255}, {wallTexture, woodTexture, wallTexture, wallTexture}, 2.0f, {.0f, .0f, .0f, .0f}},
+            {{-100, 220}, {220, 40}, {255, 25, 255, 255}, {wallTexture, woodTexture, wallTexture, wallTexture}, 2.0f, {.0f, .0f, .0f, .0f}},
+    };
+
+    Object objects[] = {
+        {{0, 0}, {1, 1},{255, 255, 255, 255}, humanTexture},
+    };
+
+    Light lights[] = {
+        {{-220, 220-100}, 150.0f, 1.0f},
+    };
+
+    const int wallCount = sizeof(walls) / sizeof(walls[0]);
+    for (int i = 0; i < wallCount; i++) {
+        physics_push_walls_list(&wallsList, &walls[i]);
+>>>>>>> parent of ca60d0c (Dekat Time)
     }
 
     bool running = true;
-    Uint64 lastTime = SDL_GetTicksNS();
     while (running) {
-        Uint64 currentTime = SDL_GetTicksNS();
         Uint32 startTime = SDL_GetTicks();
+<<<<<<< HEAD
         float deltaTime = (float)(currentTime - lastTime) / 1000000000.0f;
         lastTime = currentTime;
 
@@ -258,6 +308,21 @@ int main(int argc, char* argv[]) {
         if (input_manager_get_key_down(&inputManager, SDL_SCANCODE_ESCAPE)) running = false;
         movement(&inputManager, &player, deltaTime);
         player_update(&player);
+=======
+
+        input_manager_begin_frame(&inputManager);
+
+        if (input_manager_get_key_down(&inputManager, SDL_SCANCODE_ESCAPE)) {
+            running = false;
+        }
+
+        movement(&inputManager, &player);
+        debug = input_manager_get_key(&inputManager, SDL_SCANCODE_TAB);
+
+        player_update(&player);
+        physics_check_collisions(&player, &wallsList);
+        light_update(&lightsList, &wallsList);
+>>>>>>> parent of ca60d0c (Dekat Time)
 
         SDL_GPUCommandBuffer* commandBuffer = SDL_AcquireGPUCommandBuffer(device);
         SDL_GPUTexture* swapChainTexture;
