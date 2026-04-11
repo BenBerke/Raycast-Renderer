@@ -23,11 +23,14 @@ bool ray_intersect_wall(Vector2 origin, Vector2 dir, const Wall* wall, float* ou
         float tx1 = (minX - origin.x) / dir.x;
         float tx2 = (maxX - origin.x) / dir.x;
 <<<<<<< HEAD
+<<<<<<< HEAD
         if (tx1 > tx2) { float tmp = tx1; tx1 = tx2; tx2 = tmp; }
         if (tx1 > tMin) { tMin = tx1; enterSide = (dir.x > 0) ? 3 : 1; }
         if (tx2 < tMax) tMax = tx2;
     } else if (origin.x < minX || origin.x > maxX) return false;
 =======
+=======
+>>>>>>> parent of ca60d0c (Dekat Time)
         int tx1Side = 2;
         int tx2Side = 3;
 >>>>>>> parent of ca60d0c (Dekat Time)
@@ -37,11 +40,14 @@ bool ray_intersect_wall(Vector2 origin, Vector2 dir, const Wall* wall, float* ou
         float ty1 = (minY - origin.y) / dir.y;
         float ty2 = (maxY - origin.y) / dir.y;
 <<<<<<< HEAD
+<<<<<<< HEAD
         if (ty1 > ty2) { float tmp = ty1; ty1 = ty2; ty2 = tmp; }
         if (ty1 > tMin) { tMin = ty1; enterSide = (dir.y > 0) ? 0 : 2; }
         if (ty2 < tMax) tMax = ty2;
     } else if (origin.y < minY || origin.y > maxY) return false;
 =======
+=======
+>>>>>>> parent of ca60d0c (Dekat Time)
         int ty1Side = 1;
         int ty2Side = 0;
 >>>>>>> parent of ca60d0c (Dekat Time)

@@ -17,6 +17,7 @@ static int frames = 0;
 static float currentFps = 0.0f;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 typedef struct {
     float x, y, z;
     float r, g, b, a;
@@ -43,12 +44,16 @@ static void movement(const InputManager* inputManager, Player* player, float del
 =======
 static void movement(const InputManager* inputManager, Player* player) {
 >>>>>>> parent of ca60d0c (Dekat Time)
+=======
+static void movement(const InputManager* inputManager, Player* player) {
+>>>>>>> parent of ca60d0c (Dekat Time)
     const Vector2 forward = { cosf(player->angle), sinf(player->angle) };
     const Vector2 right = { -sinf(player->angle), cosf(player->angle) };
 
     float moveAmount = 100.0f * deltaTime; // adjust this
 
     if (input_manager_get_key(inputManager, SDL_SCANCODE_W)) {
+<<<<<<< HEAD
 <<<<<<< HEAD
         player->position = vector2_add(player->position, vector2_multiply_with_float(forward, moveAmount));
     }
@@ -72,10 +77,23 @@ static void movement(const InputManager* inputManager, Player* player) {
     if (input_manager_get_key(inputManager, SDL_SCANCODE_A)) {
         player_add_velocity(player, vector2_multiply_with_float(right, player->speed));
 >>>>>>> parent of ca60d0c (Dekat Time)
+=======
+        player_add_velocity(player, vector2_multiply_with_float(forward, player->speed));
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_S)) {
+        player_add_velocity(player, vector2_multiply_with_float(forward, -player->speed));
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_D)) {
+        player_add_velocity(player, vector2_multiply_with_float(right, -player->speed));
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_A)) {
+        player_add_velocity(player, vector2_multiply_with_float(right, player->speed));
+>>>>>>> parent of ca60d0c (Dekat Time)
     }
 
     if (input_manager_get_key(inputManager, SDL_SCANCODE_RIGHT) ||
         input_manager_get_key(inputManager, SDL_SCANCODE_E)) {
+<<<<<<< HEAD
 <<<<<<< HEAD
         player->angle -= PLAYER_ROT_SPEED * deltaTime;
         }
@@ -85,6 +103,13 @@ static void movement(const InputManager* inputManager, Player* player) {
         }
 =======
         player->angle -= PLAYER_ROT_SPEED;
+=======
+        player->angle -= PLAYER_ROT_SPEED;
+    }
+    if (input_manager_get_key(inputManager, SDL_SCANCODE_LEFT) ||
+        input_manager_get_key(inputManager, SDL_SCANCODE_Q)) {
+        player->angle += PLAYER_ROT_SPEED;
+>>>>>>> parent of ca60d0c (Dekat Time)
     }
     if (input_manager_get_key(inputManager, SDL_SCANCODE_LEFT) ||
         input_manager_get_key(inputManager, SDL_SCANCODE_Q)) {
@@ -181,6 +206,9 @@ int main(int argc, char* argv[]) {
     int wallTexture = create_texture("wall", &textures, renderer.renderer);
     int woodTexture = create_texture("wood", &textures, renderer.renderer);
     int humanTexture = create_texture("human", &textures, renderer.renderer);
+<<<<<<< HEAD
+>>>>>>> parent of ca60d0c (Dekat Time)
+=======
 >>>>>>> parent of ca60d0c (Dekat Time)
 
     size_t fragmentShaderCodeSize;
@@ -266,6 +294,7 @@ int main(int argc, char* argv[]) {
     physics_create_walls_list(&wallsList, 8);
     Wall walls[] = {
 <<<<<<< HEAD
+<<<<<<< HEAD
         {
             .position = {100.0f, 0.0f},
             .scale = {10.0f, 120.0f},
@@ -278,6 +307,8 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < sizeof(walls) / sizeof(walls[0]); i++) {
         physics_push_walls_list(&wallsList , &walls[i]);
 =======
+=======
+>>>>>>> parent of ca60d0c (Dekat Time)
             {{-260, 220}, {220, 40}, {255, 255, 255, 255}, {wallTexture, woodTexture, wallTexture, wallTexture}, 2.0f, {.0f, .0f, .0f, .0f}},
             {{-100, 220}, {220, 40}, {255, 25, 255, 255}, {wallTexture, woodTexture, wallTexture, wallTexture}, 2.0f, {.0f, .0f, .0f, .0f}},
     };
@@ -300,6 +331,7 @@ int main(int argc, char* argv[]) {
     while (running) {
         Uint32 startTime = SDL_GetTicks();
 <<<<<<< HEAD
+<<<<<<< HEAD
         float deltaTime = (float)(currentTime - lastTime) / 1000000000.0f;
         lastTime = currentTime;
 
@@ -309,6 +341,8 @@ int main(int argc, char* argv[]) {
         movement(&inputManager, &player, deltaTime);
         player_update(&player);
 =======
+=======
+>>>>>>> parent of ca60d0c (Dekat Time)
 
         input_manager_begin_frame(&inputManager);
 
@@ -322,6 +356,9 @@ int main(int argc, char* argv[]) {
         player_update(&player);
         physics_check_collisions(&player, &wallsList);
         light_update(&lightsList, &wallsList);
+<<<<<<< HEAD
+>>>>>>> parent of ca60d0c (Dekat Time)
+=======
 >>>>>>> parent of ca60d0c (Dekat Time)
 
         SDL_GPUCommandBuffer* commandBuffer = SDL_AcquireGPUCommandBuffer(device);
